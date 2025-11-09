@@ -262,19 +262,23 @@ IMPORTANT:
                 logger.info("-" * 60)
                 
                 # Call Gemini API with image and MCP tools
+                # Call Gemini API with image and MCP tools (streaming)
                 response_text = ""
                 chunk_count = 0
-                async for chunk in self.gemini_client.aio.models.generate_content_stream(
+                
+                stream = await self.gemini_client.aio.models.generate_content_stream(
                     model=self.model_id,
                     contents=contents,
                     config=config,
-                ):
+                )
+                
+                async for chunk in stream:
                     if chunk.text:
                         response_text += chunk.text
                         chunk_count += 1
-                        # Log chunks as they arrive (for streaming visibility)
-                        if chunk_count <= 5:  # Log first few chunks
+                        if chunk_count <= 5:
                             logger.debug(f"Gemini chunk #{chunk_count}: {chunk.text[:100]}...")
+
                 
                 # Log complete response
                 logger.info("-" * 60)
