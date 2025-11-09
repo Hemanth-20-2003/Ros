@@ -1,0 +1,74 @@
+[0.017s] Invoking command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/aravind/Downloads/project/robot_ws/src/robot_controller -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/aravind/Downloads/project/robot_ws/install/robot_controller
+[0.149s] -- The C compiler identification is GNU 13.3.0
+[0.280s] -- The CXX compiler identification is GNU 13.3.0
+[0.319s] -- Detecting C compiler ABI info
+[0.550s] -- Detecting C compiler ABI info - done
+[0.567s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.568s] -- Detecting C compile features
+[0.570s] -- Detecting C compile features - done
+[0.593s] -- Detecting CXX compiler ABI info
+[0.875s] -- Detecting CXX compiler ABI info - done
+[0.910s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.911s] -- Detecting CXX compile features
+[0.919s] -- Detecting CXX compile features - done
+[0.923s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.417s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.596s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.949s] -- Found ament_lint_auto: 0.17.3 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+[2.317s] -- Added test 'copyright' to check source files copyright and LICENSE
+[2.322s] -- Added test 'flake8' to check Python code syntax and style conventions
+[2.322s] -- Configured 'flake8' exclude dirs and/or files: 
+[2.323s] -- Added test 'lint_cmake' to check CMake code style
+[2.324s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[2.327s] -- Added test 'xmllint' to check XML markup files
+[2.333s] -- Configuring done (2.3s)
+[2.344s] -- Generating done (0.0s)
+[2.346s] -- Build files have been written to: /home/aravind/Downloads/project/robot_ws/build/robot_controller
+[2.361s] Invoked command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/aravind/Downloads/project/robot_ws/src/robot_controller -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/aravind/Downloads/project/robot_ws/install/robot_controller
+[2.363s] Invoking command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/aravind/Downloads/project/robot_ws/build/robot_controller -- -j4 -l4
+[2.508s] Built target ament_cmake_python_symlink_robot_controller
+[2.962s] running egg_info
+[2.963s] creating robot_controller.egg-info
+[3.001s] writing robot_controller.egg-info/PKG-INFO
+[3.001s] writing dependency_links to robot_controller.egg-info/dependency_links.txt
+[3.001s] writing top-level names to robot_controller.egg-info/top_level.txt
+[3.002s] writing manifest file 'robot_controller.egg-info/SOURCES.txt'
+[3.116s] reading manifest file 'robot_controller.egg-info/SOURCES.txt'
+[3.117s] writing manifest file 'robot_controller.egg-info/SOURCES.txt'
+[3.221s] Built target ament_cmake_python_build_robot_controller_egg
+[3.247s] Invoked command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/aravind/Downloads/project/robot_ws/build/robot_controller -- -j4 -l4
+[3.273s] Invoking command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/aravind/Downloads/project/robot_ws/build/robot_controller
+[3.292s] -- Install configuration: ""
+[3.293s] -- Execute custom install script
+[3.293s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/pythonpath.sh
+[3.317s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/pythonpath.dsv
+[3.342s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/PKG-INFO
+[3.365s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/SOURCES.txt
+[3.389s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/dependency_links.txt
+[3.414s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/top_level.txt
+[3.438s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/__init__.py
+[3.462s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/camera_publisher_node.py
+[3.486s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/motor_controller_node.py
+[3.511s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller//launch/robot_system_launch.py
+[3.533s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/robot_controller/motor_controller_node
+[3.556s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/robot_controller/camera_publisher_node
+[3.577s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/package_run_dependencies/robot_controller
+[3.602s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/parent_prefix_path/robot_controller
+[3.626s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/ament_prefix_path.sh
+[3.651s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/ament_prefix_path.dsv
+[3.676s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/path.sh
+[3.701s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/path.dsv
+[3.726s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.bash
+[3.748s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.sh
+[3.773s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.zsh
+[3.798s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.dsv
+[3.821s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/package.dsv
+[3.847s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/packages/robot_controller
+[3.872s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/cmake/robot_controllerConfig.cmake
+[3.898s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/cmake/robot_controllerConfig-version.cmake
+[3.921s] -- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/package.xml
+[4.032s] Listing '/home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller'...
+[4.032s] Compiling '/home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/__init__.py'...
+[4.032s] Compiling '/home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/camera_publisher_node.py'...
+[4.032s] Compiling '/home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/motor_controller_node.py'...
+[4.056s] Invoked command in '/home/aravind/Downloads/project/robot_ws/build/robot_controller' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/aravind/Downloads/project/robot_ws/build/robot_controller

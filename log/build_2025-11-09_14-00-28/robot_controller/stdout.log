@@ -1,0 +1,38 @@
+Built target ament_cmake_python_symlink_robot_controller
+running egg_info
+writing robot_controller.egg-info/PKG-INFO
+writing dependency_links to robot_controller.egg-info/dependency_links.txt
+writing top-level names to robot_controller.egg-info/top_level.txt
+reading manifest file 'robot_controller.egg-info/SOURCES.txt'
+writing manifest file 'robot_controller.egg-info/SOURCES.txt'
+Built target ament_cmake_python_build_robot_controller_egg
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/pythonpath.sh
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/pythonpath.dsv
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/PKG-INFO
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/SOURCES.txt
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/dependency_links.txt
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller-2.0.0-py3.12.egg-info/top_level.txt
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/__init__.py
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/camera_publisher_node.py
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller/motor_controller_node.py
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller//launch/robot_system_launch.py
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/robot_controller/motor_controller_node
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/robot_controller/camera_publisher_node
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/package_run_dependencies/robot_controller
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/parent_prefix_path/robot_controller
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/path.sh
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/environment/path.dsv
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.bash
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.sh
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.zsh
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/local_setup.dsv
+-- Symlinking: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/package.dsv
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/ament_index/resource_index/packages/robot_controller
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/cmake/robot_controllerConfig.cmake
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/cmake/robot_controllerConfig-version.cmake
+-- Up-to-date symlink: /home/aravind/Downloads/project/robot_ws/install/robot_controller/share/robot_controller/package.xml
+Listing '/home/aravind/Downloads/project/robot_ws/install/robot_controller/lib/python3.12/site-packages/robot_controller'...
