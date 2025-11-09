@@ -19,15 +19,16 @@ class MotorController(Node):
         # - ENB (Enable B) -> PWM for right motor speed
         # - IN3, IN4 -> Direction control for right motor
         self.left_motor_pins = {
-            'ena': 18,   # Enable A (PWM) for left motor speed
-            'in1': 23,   # IN1 for left motor direction
-            'in2': 24    # IN2 for left motor direction
+            'ena': 12,   # ENA (PWM) -> GPIO 12, Pin 32
+            'in1': 6,    # IN1 -> GPIO 6, Pin 31
+            'in2': 5     # IN2 -> GPIO 5, Pin 29
         }
         self.right_motor_pins = {
-            'enb': 12,   # Enable B (PWM) for right motor speed
-            'in3': 25,   # IN3 for right motor direction
-            'in4': 16    # IN4 for right motor direction
+            'enb': 13,   # ENB (PWM) -> GPIO 13, Pin 33
+            'in3': 19,   # IN3 -> GPIO 19, Pin 35
+            'in4': 26    # IN4 -> GPIO 26, Pin 37
         }
+
         
         # Robot physical parameters
         self.wheel_separation = 0.3  # Distance between wheels in meters (adjust for your robot)
