@@ -12,6 +12,7 @@ import traceback
 import re
 from typing import Optional, Tuple
 from contextlib import asynccontextmanager
+import json
 
 # FastAPI imports
 from fastapi import FastAPI, HTTPException
@@ -201,38 +202,85 @@ IMPORTANT:
         self.cmd_vel_pub.publish(msg)
         logger.info(f"PUBLISHED /cmd_vel -> linear.x={lx:.3f} m/s, angular.z={az:.3f} rad/s")
         return lx, az
+    
 
     # -------- NEW: parse Gemini text like ... {linear:{x:0.1}, angular:{z:0.0}} ...
-    def _parse_and_publish_from_text(self, text: str) -> Optional[Tuple[float, float]]:
+        def _parse_and_publish_from_text(self, text: str):
         """
-        Extract linear x and angular z from Gemini's response and publish.
+        Extract linear.x and angular.z from Gemini's response and publish.
+        Supports:
+          - JSON tool block inside ```json ... ```
+          - JSON inside ``` ... ```
+          - Loose text with {linear:{x:...}, angular:{z:...}} (previous fallback)
         Returns (lx, az) if published, else None.
         """
-        # 1) Strip code fences for consistency
-        cleaned = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("\n", " "), text)
+        # --- Try 1: fenced JSON block: ```json ... ``` or ``` ... ```
+        fence = re.compile(r"```(?:json)?\s*([\s\S]*?)```", re.IGNORECASE)
+        for block in fence.findall(text):
+            try:
+                data = json.loads(block)
+                # Expected structure:
+                # {
+                #   "tool": "publish_once",
+                #   "topic": "/cmd_vel",
+                #   "msg_type": "geometry_msgs/Twist",
+                #   "msg": { "linear":{"x":...}, "angular":{"z":...} }
+                # }
+                topic = str(data.get("topic", "")).strip()
+                msg_type = str(data.get("msg_type", "")).strip()
+                msg = data.get("msg", {}) or {}
+                lin = msg.get("linear", {}) or {}
+                ang = msg.get("angular", {}) or {}
+                if topic == "/cmd_vel" and "Twist" in msg_type:
+                    lx = float(lin.get("x", 0.0))
+                    az = float(ang.get("z", 0.0))
+                    return self._publish_cmd_vel(lx, az)
+            except Exception:
+                # Not valid JSON or not the expected structure; try next block
+                pass
 
-        # 2) Tolerant regex for {linear:{x:0.1}, angular:{z:0.0}} with optional spaces/quotes
+        # --- Try 2: JSON-like object anywhere with keys we care about
+        # Heuristic: find a {...} that contains "topic": "/cmd_vel"
+        obj_pat = re.compile(r"\{[\s\S]*?\}", re.MULTILINE)
+        for m in obj_pat.finditer(text):
+            snippet = m.group(0)
+            if '"topic"' in snippet and '/cmd_vel' in snippet:
+                try:
+                    data = json.loads(snippet)
+                    topic = str(data.get("topic", "")).strip()
+                    msg_type = str(data.get("msg_type", "")).strip()
+                    msg = data.get("msg", {}) or {}
+                    lin = msg.get("linear", {}) or {}
+                    ang = msg.get("angular", {}) or {}
+                    if topic == "/cmd_vel" and "Twist" in msg_type:
+                        lx = float(lin.get("x", 0.0))
+                        az = float(ang.get("z", 0.0))
+                        return self._publish_cmd_vel(lx, az)
+                except Exception:
+                    pass  # keep scanning
+
+        # --- Try 3: previous tolerant regex for unquoted dicts
         pattern = re.compile(
             r"linear\s*:\s*{[^}]*x\s*:\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"
             r"[^}]*}\s*,\s*angular\s*:\s*{[^}]*z\s*:\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)",
             re.IGNORECASE
         )
-        m = pattern.search(cleaned)
-        if not m:
-            # fallback: try to find x: and z: anywhere (very permissive)
-            mx = re.search(r"\bx\s*:\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)", cleaned)
-            mz = re.search(r"\bz\s*:\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)", cleaned)
-            if not (mx and mz):
-                logger.warning("Could not find linear/angular values in Gemini response.")
-                return None
-            lx_val = float(mx.group(1))
-            az_val = float(mz.group(1))
-        else:
+        m = pattern.search(text)
+        if m:
             lx_val = float(m.group(1))
             az_val = float(m.group(2))
+            return self._publish_cmd_vel(lx_val, az_val)
 
-        # Publish
-        return self._publish_cmd_vel(lx_val, az_val)
+        # --- Try 4: ultra-permissive fallback: find first x: and z:
+        mx = re.search(r"\blinear[^}]*x\s*[:=]\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)", text, re.IGNORECASE)
+        mz = re.search(r"\bangular[^}]*z\s*[:=]\s*([+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)", text, re.IGNORECASE)
+        if mx and mz:
+            lx_val = float(mx.group(1))
+            az_val = float(mz.group(1))
+            return self._publish_cmd_vel(lx_val, az_val)
+
+        logger.warning("Could not extract /cmd_vel values from Gemini response.")
+        return None
 
     async def execute_command(self, command_text: str) -> dict:
         """Execute a robot command with the latest camera image"""
