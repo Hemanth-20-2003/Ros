@@ -1,191 +1,226 @@
 #!/usr/bin/env python3
-
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-import RPi.GPIO as GPIO
+import lgpio
+import sys
 import time
 
-class MotorController(Node):
-    """ROS2 node for controlling robot motors via GPIO"""
-    
-    def __init__(self):
-        super().__init__('motor_controller')
-        
-        # L298N Motor Driver GPIO pins
-        # Standard L298N wiring:
-        # - ENA (Enable A) -> PWM for left motor speed
-        # - IN1, IN2 -> Direction control for left motor
-        # - ENB (Enable B) -> PWM for right motor speed
-        # - IN3, IN4 -> Direction control for right motor
-        self.left_motor_pins = {
-            'ena': 12,   # ENA (PWM) -> GPIO 12, Pin 32
-            'in1': 6,    # IN1 -> GPIO 6, Pin 31
-            'in2': 5     # IN2 -> GPIO 5, Pin 29
-        }
-        self.right_motor_pins = {
-            'enb': 13,   # ENB (PWM) -> GPIO 13, Pin 33
-            'in3': 19,   # IN3 -> GPIO 19, Pin 35
-            'in4': 26    # IN4 -> GPIO 26, Pin 37
-        }
+# ================================
+# L298N ⇄ Raspberry Pi pin mapping
+# (BCM numbering; matches your working keyboard node)
+# ================================
+IN1 = 6
+IN2 = 5
+IN3 = 19
+IN4 = 26
+ENA = 12   # PWM0
+ENB = 13   # PWM1
 
-        
+PWM_FREQ_HZ = 1000  # 1 kHz, same as your working code
+
+# ================================
+# Open GPIO chip (chip 4 typically user-accessible)
+# ================================
+try:
+    CHIP = lgpio.gpiochip_open(4)
+    print("Successfully opened GPIO chip 4")
+except lgpio.error as e:
+    print(f"Failed to open GPIO chip 4: {e}")
+    print("Error: Could not open GPIO chip. Check permissions.")
+    print("Try running with sudo or add user to gpio group:")
+    print("  sudo usermod -a -G gpio $USER")
+    sys.exit(1)
+
+
+def _claim_outputs_or_die(handle, pins):
+    try:
+        for p in pins:
+            lgpio.gpio_claim_output(handle, p)
+    except lgpio.error as e:
+        print(f"Error setting up GPIO pins: {e}")
+        try:
+            lgpio.gpiochip_close(handle)
+        except Exception:
+            pass
+        sys.exit(1)
+
+
+def _pwm_setup_or_die(handle):
+    try:
+        lgpio.tx_pwm(handle, ENA, PWM_FREQ_HZ, 0)  # start with 0% duty
+        lgpio.tx_pwm(handle, ENB, PWM_FREQ_HZ, 0)
+        print("PWM configured successfully")
+    except lgpio.error as e:
+        print(f"Error setting up PWM: {e}")
+        try:
+            lgpio.gpiochip_close(handle)
+        except Exception:
+            pass
+        sys.exit(1)
+
+
+class MotorController(Node):
+    """ROS2 node for controlling robot motors via L298N using lgpio"""
+
+    def __init__(self):
+        super().__init__('motor_controller_lgpio')
+
         # Robot physical parameters
-        self.wheel_separation = 0.3  # Distance between wheels in meters (adjust for your robot)
-        self.max_speed = 0.5         # Maximum speed in m/s (start conservative)
-        
-        # Initialize GPIO
-        self.setup_gpio()
-        
-        # Subscribe to velocity commands
+        self.wheel_separation = 0.3  # meters
+        self.max_speed = 0.5         # m/s
+
+        # Claim outputs and init PWM (already global handle opened)
+        _claim_outputs_or_die(CHIP, [IN1, IN2, IN3, IN4, ENA, ENB])
+        _pwm_setup_or_die(CHIP)
+
+        # Initialize all direction pins LOW, PWM 0%
+        self._all_stop()
+
+        # Subscribe to /cmd_vel
         self.subscription = self.create_subscription(
-            Twist,
-            '/cmd_vel',
-            self.cmd_vel_callback,
-            10
+            Twist, '/cmd_vel', self.cmd_vel_callback, 10
         )
-        
-        # Safety timer - stop robot if no commands received
+
+        # Safety timer
         self.last_command_time = time.time()
         self.safety_timeout = 2.0  # seconds
         self.safety_timer = self.create_timer(0.1, self.safety_check)
-        
-        self.get_logger().info('Motor Controller Node Started - L298N Driver')
-        self.get_logger().info(f'Wheel separation: {self.wheel_separation}m')
-        self.get_logger().info(f'Max speed: {self.max_speed}m/s')
-        self.get_logger().info(f'Left motor: ENA={self.left_motor_pins["ena"]}, IN1={self.left_motor_pins["in1"]}, IN2={self.left_motor_pins["in2"]}')
-        self.get_logger().info(f'Right motor: ENB={self.right_motor_pins["enb"]}, IN3={self.right_motor_pins["in3"]}, IN4={self.right_motor_pins["in4"]}')
-    
-    def setup_gpio(self):
-        """Initialize GPIO pins for L298N motor control"""
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        
-        # Setup all motor control pins
-        all_pins = [
-            self.left_motor_pins['ena'], self.left_motor_pins['in1'], self.left_motor_pins['in2'],
-            self.right_motor_pins['enb'], self.right_motor_pins['in3'], self.right_motor_pins['in4']
-        ]
-        
-        for pin in all_pins:
-            GPIO.setup(pin, GPIO.OUT)
-            GPIO.output(pin, GPIO.LOW)  # Initialize all pins to LOW
-        
-        # Initialize PWM on enable pins (ENA and ENB)
-        self.left_pwm = GPIO.PWM(self.left_motor_pins['ena'], 1000)  # 1kHz frequency
-        self.right_pwm = GPIO.PWM(self.right_motor_pins['enb'], 1000)
-        
-        self.left_pwm.start(0)   # Start with 0% duty cycle (stopped)
-        self.right_pwm.start(0)
-        
-        self.get_logger().info('L298N GPIO initialized successfully')
-    
-    def cmd_vel_callback(self, msg):
-        """Process incoming velocity commands for L298N driver"""
-        
+
+        self.get_logger().info('Motor Controller (lgpio) Started - L298N Driver')
+        self.get_logger().info(f'Wheel separation: {self.wheel_separation} m')
+        self.get_logger().info(f'Max speed: {self.max_speed} m/s')
+        self.get_logger().info(
+            f'Pins (BCM): ENA={ENA}, IN1={IN1}, IN2={IN2}; ENB={ENB}, IN3={IN3}, IN4={IN4}'
+        )
+
+    # --------------- Low-level helpers ---------------
+
+    def _set_left_dir(self, forward: bool | None):
+        """forward=True sets IN1=1, IN2=0; forward=False sets IN1=0, IN2=1; None sets both LOW (brake/coast)."""
+        if forward is True:
+            lgpio.gpio_write(CHIP, IN1, 1)
+            lgpio.gpio_write(CHIP, IN2, 0)
+        elif forward is False:
+            lgpio.gpio_write(CHIP, IN1, 0)
+            lgpio.gpio_write(CHIP, IN2, 1)
+        else:
+            lgpio.gpio_write(CHIP, IN1, 0)
+            lgpio.gpio_write(CHIP, IN2, 0)
+
+    def _set_right_dir(self, forward: bool | None):
+        """forward=True sets IN3=1, IN4=0; forward=False sets IN3=0, IN4=1; None sets both LOW."""
+        if forward is True:
+            lgpio.gpio_write(CHIP, IN3, 1)
+            lgpio.gpio_write(CHIP, IN4, 0)
+        elif forward is False:
+            lgpio.gpio_write(CHIP, IN3, 0)
+            lgpio.gpio_write(CHIP, IN4, 1)
+        else:
+            lgpio.gpio_write(CHIP, IN3, 0)
+            lgpio.gpio_write(CHIP, IN4, 0)
+
+    def _set_left_pwm(self, duty_percent: float):
+        """0–100"""
+        duty = max(0.0, min(100.0, duty_percent))
+        lgpio.tx_pwm(CHIP, ENA, PWM_FREQ_HZ, duty)
+
+    def _set_right_pwm(self, duty_percent: float):
+        """0–100"""
+        duty = max(0.0, min(100.0, duty_percent))
+        lgpio.tx_pwm(CHIP, ENB, PWM_FREQ_HZ, duty)
+
+    def _all_stop(self):
+        """Stop both motors and set direction pins LOW"""
+        self._set_left_pwm(0)
+        self._set_right_pwm(0)
+        self._set_left_dir(None)
+        self._set_right_dir(None)
+
+    # --------------- ROS callback & safety ---------------
+
+    def cmd_vel_callback(self, msg: Twist):
         # Update command timestamp
         self.last_command_time = time.time()
-        
-        # Extract velocities
-        linear_x = max(-self.max_speed, min(self.max_speed, msg.linear.x))
-        angular_z = max(-2.0, min(2.0, msg.angular.z))  # Limit rotation rate
-        
+
+        # Extract velocities with limits
+        linear_x = max(-self.max_speed, min(self.max_speed, float(msg.linear.x)))
+        angular_z = max(-2.0, min(2.0, float(msg.angular.z)))
+
         # Differential drive kinematics
-        # Left wheel velocity = linear - angular * wheel_separation / 2
-        # Right wheel velocity = linear + angular * wheel_separation / 2
-        left_velocity = linear_x - (angular_z * self.wheel_separation / 2)
-        right_velocity = linear_x + (angular_z * self.wheel_separation / 2)
-        
-        # Convert to PWM values (0-100)
-        left_pwm_value = min(abs(left_velocity) / self.max_speed * 100, 100)
-        right_pwm_value = min(abs(right_velocity) / self.max_speed * 100, 100)
-        
-        # L298N direction control:
-        # Forward: IN1=HIGH, IN2=LOW (left) or IN3=HIGH, IN4=LOW (right)
-        # Backward: IN1=LOW, IN2=HIGH (left) or IN3=LOW, IN4=HIGH (right)
-        # Stop: IN1=LOW, IN2=LOW (left) or IN3=LOW, IN4=LOW (right)
-        
-        # Left motor direction
-        if left_velocity > 0.01:  # Forward
-            GPIO.output(self.left_motor_pins['in1'], GPIO.HIGH)
-            GPIO.output(self.left_motor_pins['in2'], GPIO.LOW)
-        elif left_velocity < -0.01:  # Backward
-            GPIO.output(self.left_motor_pins['in1'], GPIO.LOW)
-            GPIO.output(self.left_motor_pins['in2'], GPIO.HIGH)
-        else:  # Stop
-            GPIO.output(self.left_motor_pins['in1'], GPIO.LOW)
-            GPIO.output(self.left_motor_pins['in2'], GPIO.LOW)
-        
-        # Right motor direction
-        if right_velocity > 0.01:  # Forward
-            GPIO.output(self.right_motor_pins['in3'], GPIO.HIGH)
-            GPIO.output(self.right_motor_pins['in4'], GPIO.LOW)
-        elif right_velocity < -0.01:  # Backward
-            GPIO.output(self.right_motor_pins['in3'], GPIO.LOW)
-            GPIO.output(self.right_motor_pins['in4'], GPIO.HIGH)
-        else:  # Stop
-            GPIO.output(self.right_motor_pins['in3'], GPIO.LOW)
-            GPIO.output(self.right_motor_pins['in4'], GPIO.LOW)
-        
-        # Apply PWM values to enable pins
-        self.left_pwm.ChangeDutyCycle(left_pwm_value)
-        self.right_pwm.ChangeDutyCycle(right_pwm_value)
-        
-        # Log the command
+        half_w = self.wheel_separation / 2.0
+        left_velocity = linear_x - (angular_z * half_w)
+        right_velocity = linear_x + (angular_z * half_w)
+
+        # Convert to PWM duty (0–100)
+        left_pwm = min(abs(left_velocity) / self.max_speed * 100.0, 100.0)
+        right_pwm = min(abs(right_velocity) / self.max_speed * 100.0, 100.0)
+
+        # Direction control
+        if left_velocity > 0.01:
+            self._set_left_dir(True)
+        elif left_velocity < -0.01:
+            self._set_left_dir(False)
+        else:
+            self._set_left_dir(None)
+            left_pwm = 0.0
+
+        if right_velocity > 0.01:
+            self._set_right_dir(True)
+        elif right_velocity < -0.01:
+            self._set_right_dir(False)
+        else:
+            self._set_right_dir(None)
+            right_pwm = 0.0
+
+        # Apply PWM
+        self._set_left_pwm(left_pwm)
+        self._set_right_pwm(right_pwm)
+
+        # Log if anything is moving
         if abs(linear_x) > 0.01 or abs(angular_z) > 0.01:
             self.get_logger().info(
-                f'Motor speeds: L={left_velocity:.2f}m/s ({left_pwm_value:.1f}%), '
-                f'R={right_velocity:.2f}m/s ({right_pwm_value:.1f}%)'
+                f'Motor speeds: L={left_velocity:.2f} m/s ({left_pwm:.1f}%), '
+                f'R={right_velocity:.2f} m/s ({right_pwm:.1f}%)'
             )
-    
+
     def safety_check(self):
-        """Safety function to stop robot if no recent commands"""
+        """Stop robot if no recent commands"""
         if time.time() - self.last_command_time > self.safety_timeout:
-            # Stop motors by setting PWM to 0 and direction pins to LOW
-            self.left_pwm.ChangeDutyCycle(0)
-            self.right_pwm.ChangeDutyCycle(0)
-            GPIO.output(self.left_motor_pins['in1'], GPIO.LOW)
-            GPIO.output(self.left_motor_pins['in2'], GPIO.LOW)
-            GPIO.output(self.right_motor_pins['in3'], GPIO.LOW)
-            GPIO.output(self.right_motor_pins['in4'], GPIO.LOW)
-    
+            self._all_stop()
+
+    # --------------- Cleanup ---------------
+
     def destroy_node(self):
-        """Clean up GPIO on shutdown"""
-        self.get_logger().info('Shutting down motor controller...')
-        
-        # Stop all motors
-        self.left_pwm.ChangeDutyCycle(0)
-        self.right_pwm.ChangeDutyCycle(0)
-        
-        # Set all direction pins to LOW
-        GPIO.output(self.left_motor_pins['in1'], GPIO.LOW)
-        GPIO.output(self.left_motor_pins['in2'], GPIO.LOW)
-        GPIO.output(self.right_motor_pins['in3'], GPIO.LOW)
-        GPIO.output(self.right_motor_pins['in4'], GPIO.LOW)
-        
-        # Clean up PWM
-        self.left_pwm.stop()
-        self.right_pwm.stop()
-        
-        # Clean up GPIO
-        GPIO.cleanup()
-        
+        self.get_logger().info('Shutting down motor controller (lgpio)...')
+        try:
+            self._all_stop()
+        except Exception:
+            pass
+        # Free pins and close chip
+        try:
+            for p in [IN1, IN2, IN3, IN4, ENA, ENB]:
+                lgpio.gpio_free(CHIP, p)
+        except Exception:
+            pass
+        try:
+            lgpio.gpiochip_close(CHIP)
+        except Exception:
+            pass
         super().destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
-    
-    motor_controller = MotorController()
-    
+    node = MotorController()
     try:
-        rclpy.spin(motor_controller)
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:
-        motor_controller.destroy_node()
+        node.destroy_node()
         rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
-
-
